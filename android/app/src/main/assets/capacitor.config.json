@@ -1,0 +1,8 @@
+{
+	"appId": "com.rlzp123.vistoriaimovel",
+	"appName": "VistoriaImovel",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https"
+	}
+}
