@@ -45,20 +45,52 @@ export default function App() {
     else setItems(data || [])
   }
 
-  async function handleAuth(event) {
-    event.preventDefault()
-    if (!isSupabaseConfigured) {
-      setMessage('Configure o arquivo .env com a URL e a chave pública do Supabase.')
-      return
-    }
-    setBusy(true); setMessage('')
-    const result = authMode === 'login'
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password })
-    setBusy(false)
-    if (result.error) setMessage(result.error.message)
-    else if (authMode === 'signup' && !result.data.session) setMessage('Cadastro realizado! Confirme seu e-mail para entrar.')
+  
+async function handleAuth(event) {
+  event.preventDefault()
+
+  if (!isSupabaseConfigured || !supabase) {
+    setMessage('Supabase não configurado. Confira o arquivo .env.')
+    return
   }
+
+  setBusy(true)
+  setMessage('')
+
+  try {
+    if (authMode === 'signup') {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
+      })
+
+      if (error) throw error
+
+      if (!data.session) {
+        setMessage(
+          'Cadastro realizado! Confira seu e-mail e confirme sua conta antes de entrar.'
+        )
+      } else {
+        setMessage('Conta criada com sucesso!')
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      })
+
+      if (error) throw error
+    }
+  } catch (error) {
+    setMessage(error.message || 'Não foi possível realizar a autenticação.')
+  } finally {
+    setBusy(false)
+  }
+}
+
 
   async function logout() {
     await supabase.auth.signOut()
